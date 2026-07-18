@@ -6,33 +6,39 @@ const MarksheetAnalysis = ({ data }) => {
     return <div className="error-message">No data available</div>;
   }
 
-  const { student_information, subjects, summary, analysis } = data.groq_response;
+  const groqData = data.groq_response;
+  const {
+    student_information,
+    academic_summary,
+    year_wise_analysis,
+    subject_analysis,
+    strengths,
+    improvement_required,
+    future_scope,
+    risk_assessment,
+    final_remark
+  } = groqData;
 
-  const getPerformanceColor = (performance) => {
-    const lower = performance.toLowerCase();
-    if (lower.includes('outstanding') || lower.includes('excellent')) return '#2ecc71';
-    if (lower.includes('very good')) return '#3498db';
-    if (lower.includes('good')) return '#f39c12';
-    if (lower.includes('average')) return '#e74c3c';
-    return '#95a5a6';
+  const getRiskColor = (riskLevel) => {
+    const level = riskLevel?.toUpperCase();
+    if (level === 'HIGH') return '#e74c3c';
+    if (level === 'MEDIUM') return '#f39c12';
+    return '#2ecc71';
   };
 
-  const getGradeColor = (grade) => {
-    if (!grade) return '#ecf0f1';
-    const g = grade.toUpperCase();
-    if (g.startsWith('A')) return '#2ecc71';
-    if (g.startsWith('B')) return '#3498db';
-    if (g.startsWith('C')) return '#f39c12';
-    if (g.startsWith('D')) return '#e67e22';
-    return '#e74c3c';
+  const getTrendIcon = (trend) => {
+    const t = trend?.toLowerCase();
+    if (t?.includes('improving') || t?.includes('increasing')) return '📈';
+    if (t?.includes('declining') || t?.includes('decreasing')) return '📉';
+    return '➡️';
   };
 
   return (
     <div className="marksheet-analysis-container">
       {/* Header */}
       <div className="report-header">
-        <h1>📄 Student Performance Report</h1>
-        <p className="report-subtitle">Comprehensive Academic Analysis</p>
+        <h1>📊 Comprehensive Student Performance Report</h1>
+        <p className="report-subtitle">Multi-Year Academic Analysis & Insights</p>
       </div>
 
       {/* Student Information Card */}
@@ -41,172 +47,239 @@ const MarksheetAnalysis = ({ data }) => {
         <div className="info-grid">
           <div className="info-item">
             <span className="info-label">Student Name</span>
-            <span className="info-value">{student_information.student_name}</span>
+            <span className="info-value">{student_information.name}</span>
           </div>
           <div className="info-item">
             <span className="info-label">Roll Number</span>
             <span className="info-value">{student_information.roll_number}</span>
           </div>
           <div className="info-item">
-            <span className="info-label">Registration Number</span>
-            <span className="info-value">{student_information.registration_number}</span>
+            <span className="info-label">Institution</span>
+            <span className="info-value">{student_information.institution}</span>
           </div>
           <div className="info-item">
-            <span className="info-label">School/College</span>
-            <span className="info-value">{student_information.school_name}</span>
+            <span className="info-label">Program</span>
+            <span className="info-value">{student_information.program}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Board</span>
-            <span className="info-value">{student_information.board}</span>
+        </div>
+      </div>
+
+      {/* Academic Summary Card */}
+      <div className="card summary-card">
+        <h2 className="section-title">📈 Academic Summary</h2>
+        <div className="summary-overview">
+          <div className="overview-item">
+            <span className="overview-label">Total Marksheets Analyzed</span>
+            <span className="overview-value">{academic_summary.total_marksheets}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Examination</span>
-            <span className="info-value">{student_information.examination}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Year</span>
-            <span className="info-value">{student_information.year}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Result</span>
-            <span className="info-value result-badge">{student_information.result}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">Overall Grade</span>
-            <span className="info-value grade-badge" style={{ backgroundColor: getGradeColor(student_information.overall_grade) }}>
-              {student_information.overall_grade}
+          <div className="overview-item">
+            <span className="overview-label">Overall Trend</span>
+            <span className="overview-value trend">
+              {getTrendIcon(academic_summary.overall_trend)} {academic_summary.overall_trend}
             </span>
           </div>
+          <div className="overview-item">
+            <span className="overview-label">Consistency Score</span>
+            <span className="overview-value">{academic_summary.consistency_score}%</span>
+          </div>
+          <div className="overview-item">
+            <span className="overview-label">Overall Growth</span>
+            <span className="overview-value growth">{academic_summary.overall_growth_percentage > 0 ? '+' : ''}{academic_summary.overall_growth_percentage}%</span>
+          </div>
         </div>
       </div>
 
-      {/* Summary Card */}
-      <div className="card summary-card">
-        <h2 className="section-title">📊 Academic Summary</h2>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <span className="summary-label">Total Subjects</span>
-            <span className="summary-value">{summary.total_subjects}</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Average Marks</span>
-            <span className="summary-value">{summary.average_marks.toFixed(2)}</span>
-          </div>
+      {/* Year-wise Analysis Card */}
+      <div className="card year-wise-card">
+        <h2 className="section-title">📅 Year-wise Performance</h2>
+        <div className="years-grid">
+          {year_wise_analysis.map((yearData, index) => (
+            <div key={index} className="year-card">
+              <div className="year-header">
+                <h3 className="year-label">Year {yearData.year}</h3>
+              </div>
+              <div className="year-metrics">
+                <div className="metric">
+                  <span className="metric-label">Percentage</span>
+                  <span className="metric-value">{yearData.percentage}%</span>
+                </div>
+                <div className="metric">
+                  <span className="metric-label">CGPA</span>
+                  <span className="metric-value">{yearData.cgpa}</span>
+                </div>
+              </div>
+              <div className="year-remarks">
+                <p className="remarks-text">💬 {yearData.remarks}</p>
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div className="strengths-weaknesses">
-          <div className="strength-section">
-            <h3 className="subsection-title">✨ Strongest Subjects</h3>
-            <div className="badges-container">
-              {summary.strongest_subjects.map((subject, index) => (
-                <span key={index} className="badge strength-badge">{subject}</span>
-              ))}
+      {/* Subject Analysis Card */}
+      <div className="card subject-analysis-card">
+        <h2 className="section-title">📚 Subject-wise Trend Analysis</h2>
+        <div className="subjects-container">
+          {subject_analysis.map((subject, index) => (
+            <div key={index} className="subject-analysis-item">
+              <div className="subject-header">
+                <h3 className="subject-name">{subject.subject_name}</h3>
+                <span className={`trend-badge ${subject.trend.toLowerCase()}`}>
+                  {getTrendIcon(subject.trend)} {subject.trend}
+                </span>
+              </div>
+              
+              <div className="scores-timeline">
+                {subject.scores.map((score, scoreIndex) => (
+                  <div key={scoreIndex} className="score-point">
+                    <span className="score-year">{score.year}</span>
+                    <span className="score-marks">{score.marks} marks</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="subject-metrics">
+                <div className="metric-item">
+                  <span className="metric-label">Growth</span>
+                  <span className={`metric-value ${subject.growth_percentage > 0 ? 'positive' : subject.growth_percentage < 0 ? 'negative' : 'neutral'}`}>
+                    {subject.growth_percentage > 0 ? '+' : ''}{subject.growth_percentage}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="subject-recommendation">
+                <p className="recommendation-text">💡 {subject.recommendation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Strengths Card */}
+      <div className="card strengths-card">
+        <h2 className="section-title">⭐ Key Strengths</h2>
+        <div className="strengths-list">
+          {strengths.map((strength, index) => (
+            <div key={index} className="strength-item">
+              <span className="strength-icon">✨</span>
+              <span className="strength-text">{strength}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Improvement Required Card */}
+      <div className="card improvement-card">
+        <h2 className="section-title">📍 Areas Requiring Improvement</h2>
+        {improvement_required.map((item, index) => (
+          <div key={index} className="improvement-item">
+            <div className="improvement-header">
+              <h3 className="improvement-subject">{item.subject}</h3>
+              <span className="improvement-reason">Reason: {item.reason}</span>
+            </div>
+            <div className="improvement-actions">
+              <p className="actions-label">Recommended Actions:</p>
+              <ul className="actions-list">
+                {item.recommended_actions.map((action, actionIndex) => (
+                  <li key={actionIndex} className="action-item">
+                    <span className="action-icon">→</span>
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-          <div className="weakness-section">
-            <h3 className="subsection-title">⚠️ Subjects Needing Improvement</h3>
-            <div className="badges-container">
-              {summary.weakest_subjects.map((subject, index) => (
-                <span key={index} className="badge weakness-badge">{subject}</span>
+        ))}
+      </div>
+
+      {/* Risk Assessment Card */}
+      <div className="card risk-card">
+        <h2 className="section-title">⚠️ Risk Assessment</h2>
+        <div className="risk-content">
+          <div className="risk-level-badge" style={{ backgroundColor: getRiskColor(risk_assessment.risk_level) }}>
+            {risk_assessment.risk_level} Risk
+          </div>
+          <div className="risk-observations">
+            <h3 className="observations-title">Observations:</h3>
+            <ul className="observations-list">
+              {risk_assessment.observations.map((observation, index) => (
+                <li key={index} className="observation-item">
+                  <span className="obs-icon">•</span>
+                  <span>{observation}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Subjects Marks Table */}
-      <div className="card subjects-card">
-        <h2 className="section-title">📚 Subject-wise Performance</h2>
-        <div className="table-responsive">
-          <table className="subjects-table">
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Written Marks</th>
-                <th>Oral Marks</th>
-                <th>Total Marks</th>
-                <th>Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subjects.map((subject, index) => (
-                <tr key={index}>
-                  <td className="subject-name">{subject.subject_name}</td>
-                  <td>{subject.written_marks}</td>
-                  <td>{subject.oral_marks}</td>
-                  <td className="total-marks"><strong>{subject.total_marks}</strong></td>
-                  <td>
-                    <span 
-                      className="grade-badge" 
-                      style={{ backgroundColor: getGradeColor(subject.grade) }}
-                    >
-                      {subject.grade || '-'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Performance Analysis Card */}
-      <div className="card analysis-card">
-        <h2 className="section-title">📈 Performance Analysis</h2>
+      {/* Future Scope Card */}
+      <div className="card future-scope-card">
+        <h2 className="section-title">🚀 Future Scope & Recommendations</h2>
         
-        <div className="performance-level">
-          <span className="level-label">Performance Level</span>
-          <span 
-            className="level-badge" 
-            style={{ backgroundColor: getPerformanceColor(analysis.performance_level) }}
-          >
-            {analysis.performance_level}
-          </span>
+        <div className="future-sections">
+          <div className="future-section">
+            <h3 className="future-subsection-title">🎯 Recommended Streams</h3>
+            <div className="future-items">
+              {future_scope.recommended_streams.map((stream, index) => (
+                <span key={index} className="future-badge stream-badge">{stream}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="future-section">
+            <h3 className="future-subsection-title">💼 Recommended Careers</h3>
+            <div className="future-items">
+              {future_scope.recommended_careers.map((career, index) => (
+                <span key={index} className="future-badge career-badge">{career}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="future-section">
+            <h3 className="future-subsection-title">🛠️ Skills to Develop</h3>
+            <div className="future-items">
+              {future_scope.recommended_skills.map((skill, index) => (
+                <span key={index} className="future-badge skill-badge">{skill}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="future-section">
+            <h3 className="future-subsection-title">📖 Higher Studies Suggestions</h3>
+            <ul className="suggestions-list">
+              {future_scope.higher_studies_suggestions.map((suggestion, index) => (
+                <li key={index} className="suggestion-item">
+                  <span className="suggestion-icon">→</span>
+                  <span>{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
+      </div>
 
-        <div className="analysis-sections">
-          <div className="analysis-section">
-            <h3 className="subsection-title">💪 Strengths</h3>
-            <ul className="points-list">
-              {analysis.strengths.map((strength, index) => (
-                <li key={index} className="point-item">
-                  <span className="point-icon">✓</span>
-                  <span>{strength}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Final Remark Card */}
+      <div className="card final-remark-card">
+        <h2 className="section-title">📋 Final Remarks & Mentor Suggestions</h2>
+        
+        <div className="final-remark-content">
+          <div className="overall-grade-section">
+            <span className="grade-label">Overall Grade</span>
+            <span className="grade-value">{final_remark.overall_grade}</span>
           </div>
 
-          <div className="analysis-section">
-            <h3 className="subsection-title">🎯 Areas for Improvement</h3>
-            <ul className="points-list">
-              {analysis.areas_for_improvement.map((area, index) => (
-                <li key={index} className="point-item">
-                  <span className="point-icon improvement-icon">→</span>
-                  <span>{area}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="summary-section">
+            <h3 className="summary-title">Summary</h3>
+            <p className="summary-text">{final_remark.summary}</p>
           </div>
 
-          <div className="analysis-section">
-            <h3 className="subsection-title">📖 Study Recommendations</h3>
-            <ul className="points-list">
-              {analysis.study_recommendations.map((recommendation, index) => (
-                <li key={index} className="point-item">
-                  <span className="point-icon">💡</span>
-                  <span>{recommendation}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="analysis-section">
-            <h3 className="subsection-title">🚀 Career Suggestions</h3>
-            <ul className="points-list">
-              {analysis.career_suggestions.map((suggestion, index) => (
-                <li key={index} className="point-item">
-                  <span className="point-icon">⭐</span>
+          <div className="mentor-section">
+            <h3 className="mentor-title">Mentor Suggestions</h3>
+            <ul className="mentor-list">
+              {final_remark.mentor_suggestions.map((suggestion, index) => (
+                <li key={index} className="mentor-item">
+                  <span className="mentor-icon">👨‍🏫</span>
                   <span>{suggestion}</span>
                 </li>
               ))}
@@ -217,8 +290,8 @@ const MarksheetAnalysis = ({ data }) => {
 
       {/* Footer */}
       <div className="report-footer">
-        <p>This report is generated based on the uploaded marksheet analysis.</p>
-        <p className="footer-date">Generated on: {new Date().toLocaleDateString()}</p>
+        <p>This comprehensive report has been generated based on your uploaded marksheets analysis.</p>
+        <p className="footer-date">Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
       </div>
     </div>
   );

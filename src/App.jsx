@@ -6,20 +6,24 @@ function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [marksheetFile, setMarksheetFile] = useState(null);
+  const [marksheetFiles, setMarksheetFiles] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 
-  const fetchMarksheetAnalysis = async (file) => {
+  const fetchMarksheetAnalysis = async (files) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Replace with your actual API endpoint
-      const apiEndpoint = process.env.REACT_APP_API_ENDPOINT || 'http://localhost:3000/analyze_marksheet'; 
+      // Resolve endpoint from runtime override, build env, or fallback
+      const apiEndpoint = (typeof window !== 'undefined' && window._env_ && window._env_.REACT_APP_API_ENDPOINT)
+        || process.env.REACT_APP_API_ENDPOINT
+        || 'http://18.234.170.77:3000/analyze_marksheet';
       
-      // Create FormData to send file
+      // Create FormData to send multiple files
       const formData = new FormData();
-      formData.append('file', file);
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
 
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -47,58 +51,90 @@ function App() {
     const sampleData = {
       groq_response: {
         student_information: {
-          student_name: "SUDIP DHAR",
-          roll_number: "B076616",
-          registration_number: "0532",
-          school_name: "SINDRANI SABITRI HIGH SCHOOL",
-          board: "MADHYAMIK PARIKSHA",
-          examination: "SECONDARY EXAMINATION",
-          year: 2009,
-          result: "PASS",
-          overall_grade: "A+"
+          name: "SUDIP DHAR",
+          roll_number: "B07661G",
+          institution: "SINDRANI SABITRI HIGH SCHOOL",
+          program: "MADHYAMIK PARIKSHA (SECONDARY EXAMINATION)"
         },
-        subjects: [
+        academic_summary: {
+          total_marksheets: 2,
+          overall_trend: "Improving",
+          consistency_score: 70,
+          overall_growth_percentage: 10
+        },
+        year_wise_analysis: [
           {
-            subject_name: "FIRST LANGUAGE - (1ST PAPER)",
-            written_marks: 69,
-            oral_marks: 20,
-            total_marks: 89,
-            grade: "B+"
+            year: "2009",
+            percentage: 75,
+            cgpa: 7.5,
+            remarks: "Good performance"
           },
           {
-            subject_name: "FIRST LANGUAGE - (2ND PAPER)",
-            written_marks: 67,
-            oral_marks: 0,
-            total_marks: 67,
-            grade: null
-          },
+            year: "2023",
+            percentage: 80,
+            cgpa: 8,
+            remarks: "Excellent performance"
+          }
+        ],
+        subject_analysis: [
           {
-            subject_name: "SECOND LANGUAGE",
-            written_marks: 45,
-            oral_marks: 10,
-            total_marks: 55,
-            grade: "B"
+            subject_name: "FIRST LANGUAGE",
+            scores: [
+              { year: "2009", marks: 69 },
+              { year: "2023", marks: 56 }
+            ],
+            trend: "Stable",
+            growth_percentage: 0,
+            recommendation: "Need to focus on language skills"
           },
           {
             subject_name: "MATHEMATICS",
-            written_marks: 72,
-            oral_marks: 10,
-            total_marks: 82,
-            grade: "A+"
+            scores: [
+              { year: "2009", marks: 82 },
+              { year: "2023", marks: 41 }
+            ],
+            trend: "Declining",
+            growth_percentage: -50,
+            recommendation: "Need to work on mathematics skills"
           }
         ],
-        summary: {
-          total_subjects: 4,
-          average_marks: 73.25,
-          strongest_subjects: ["MATHEMATICS", "FIRST LANGUAGE - (1ST PAPER)"],
-          weakest_subjects: ["SECOND LANGUAGE"]
+        strengths: [
+          "MATHEMATICS (2009)",
+          "PHYSICAL SCIENCE (2023)"
+        ],
+        improvement_required: [
+          {
+            subject: "MATHEMATICS",
+            reason: "Declining trend",
+            recommended_actions: [
+              "Practice mathematics problems regularly",
+              "Seek help from teacher or tutor"
+            ]
+          }
+        ],
+        future_scope: {
+          recommended_streams: ["Science", "Arts"],
+          recommended_careers: ["Engineering", "Teaching"],
+          recommended_skills: ["Communication", "Problem-solving"],
+          higher_studies_suggestions: [
+            "Pursue higher education in mathematics or science",
+            "Consider taking online courses or certifications"
+          ]
         },
-        analysis: {
-          performance_level: "OUTSTANDING",
-          strengths: ["SCIENCE SUBJECTS", "MATHEMATICS"],
-          areas_for_improvement: ["SECOND LANGUAGE"],
-          study_recommendations: ["FOCUS ON LANGUAGE SUBJECTS", "PRACTICE MORE MATH PROBLEMS"],
-          career_suggestions: ["SCIENCE RELATED FIELDS", "ENGINEERING", "RESEARCH"]
+        risk_assessment: {
+          risk_level: "Medium",
+          observations: [
+            "Declining trend in mathematics",
+            "Need to focus on language skills"
+          ]
+        },
+        final_remark: {
+          summary: "The student has shown a mixed performance across the years. While there are areas of strength, there are also areas that require improvement.",
+          overall_grade: "B+",
+          mentor_suggestions: [
+            "Focus on mathematics skills",
+            "Practice language skills regularly"
+          ]
         }
       }
     };
@@ -108,12 +144,24 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!marksheetFile) {
-      setError('Please select a marksheet image');
+    if (marksheetFiles.length === 0) {
+      setError('Please select at least one marksheet');
       return;
     }
     
-    fetchMarksheetAnalysis(marksheetFile);
+    fetchMarksheetAnalysis(marksheetFiles);
+  };
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    // Append new files to existing files
+    setMarksheetFiles(prevFiles => [...prevFiles, ...newFiles]);
+    // Reset the file input so you can select the same file again if needed
+    e.target.value = '';
+  };
+
+  const removeFile = (index) => {
+    setMarksheetFiles(marksheetFiles.filter((_, i) => i !== index));
   };
 
   return (
@@ -121,21 +169,40 @@ function App() {
       {!submitted ? (
         <div className="upload-container">
           <div className="upload-card">
-            <h1>� Marksheet Analysis</h1>
-            <p className="subtitle">Upload your marksheet image to get detailed performance analysis</p>
+            <h1>📊 Multi-Year Marksheet Analysis</h1>
+            <p className="subtitle">Upload multiple marksheets to get comparative year-wise analysis and insights</p>
             
             <form onSubmit={handleSubmit} className="upload-form">
               <div className="form-group">
-                <label htmlFor="marksheet-file" className="form-label">🖼️ Upload Marksheet Image</label>
+                <label htmlFor="marksheet-files" className="form-label">🖼️ Upload Marksheet Images</label>
                 <input
-                  id="marksheet-file"
+                  id="marksheet-files"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
-                  onChange={(e) => setMarksheetFile(e.target.files[0])}
+                  onChange={handleFileChange}
                   className="file-input"
-                  required
+                  multiple
                 />
-                {marksheetFile && <p className="file-name">✓ {marksheetFile.name}</p>}
+                
+                {marksheetFiles.length > 0 && (
+                  <div className="files-list">
+                    <p className="files-count">📎 {marksheetFiles.length} file(s) selected:</p>
+                    <ul className="file-items">
+                      {marksheetFiles.map((file, index) => (
+                        <li key={index} className="file-item">
+                          <span className="file-item-name">✓ {file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="remove-file-btn"
+                          >
+                            ✕
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               
               {error && <div className="error-message">{error}</div>}
@@ -143,9 +210,9 @@ function App() {
               <button 
                 type="submit" 
                 className="submit-button"
-                disabled={loading}
+                disabled={loading || marksheetFiles.length === 0}
               >
-                {loading ? 'Analyzing...' : 'Analyze Marksheet'}
+                {loading ? 'Analyzing...' : 'Analyze Marksheets'}
               </button>
             </form>
           </div>
@@ -155,7 +222,7 @@ function App() {
           {loading && (
             <div className="loading-container">
               <div className="spinner"></div>
-              <p>Analyzing your marksheet...</p>
+              <p>Analyzing your marksheets...</p>
             </div>
           )}
           
@@ -174,12 +241,12 @@ function App() {
                   onClick={() => {
                     setSubmitted(false);
                     setData(null);
-                    setMarksheetFile(null);
+                    setMarksheetFiles([]);
                     setError(null);
                   }}
                   className="reset-button"
                 >
-                  ← Analyze Another Marksheet
+                  ← Analyze Other Marksheets
                 </button>
               </div>
             </>
