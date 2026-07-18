@@ -14,10 +14,8 @@ function App() {
       setLoading(true);
       setError(null);
       
-      // Resolve endpoint from runtime override, build env, or fallback
-      const apiEndpoint = (typeof window !== 'undefined' && window._env_ && window._env_.REACT_APP_API_ENDPOINT)
-        || process.env.REACT_APP_API_ENDPOINT
-        || 'http://18.234.170.77:3000/analyze_marksheet';
+      // Resolve endpoint from build env or fallback
+      const apiEndpoint = process.env.REACT_APP_API_ENDPOINT || 'http://18.234.170.77:3000/analyze_marksheet';
       
       // Create FormData to send multiple files
       const formData = new FormData();
