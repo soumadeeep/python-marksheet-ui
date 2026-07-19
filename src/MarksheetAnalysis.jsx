@@ -123,9 +123,9 @@ const MarksheetAnalysis = ({ data }) => {
           {subject_analysis.map((subject, index) => (
             <div key={index} className="subject-analysis-item">
               <div className="subject-header">
-                <h3 className="subject-name">{subject.subject_name}</h3>
-                <span className={`trend-badge ${subject.trend.toLowerCase()}`}>
-                  {getTrendIcon(subject.trend)} {subject.trend}
+                <h3 className="subject-name">{subject.subject_name || 'Unknown Subject'}</h3>
+                <span className={`trend-badge ${subject.trend ? subject.trend.toLowerCase() : 'stable'}`}>
+                  {getTrendIcon(subject.trend)} {subject.trend || 'Stable'}
                 </span>
               </div>
               

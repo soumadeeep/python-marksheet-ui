@@ -14,8 +14,7 @@ function App() {
       setLoading(true);
       setError(null);
       
-      // Resolve endpoint from build env or fallback
-      const apiEndpoint = process.env.REACT_APP_API_ENDPOINT || 'http://18.234.170.77:3000/analyze_marksheet';
+      const apiEndpoint = 'http://marksheet-load-balancer-97479959.us-east-1.elb.amazonaws.com/analyze_marksheet';
       
       // Create FormData to send multiple files
       const formData = new FormData();
