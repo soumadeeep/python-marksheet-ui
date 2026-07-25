@@ -19,13 +19,6 @@ const MarksheetAnalysis = ({ data }) => {
     final_remark
   } = groqData;
 
-  const getRiskColor = (riskLevel) => {
-    const level = riskLevel?.toUpperCase();
-    if (level === 'HIGH') return '#e74c3c';
-    if (level === 'MEDIUM') return '#f39c12';
-    return '#2ecc71';
-  };
-
   const getTrendIcon = (trend) => {
     const t = trend?.toLowerCase();
     if (t?.includes('improving') || t?.includes('increasing')) return '📈';
@@ -196,7 +189,7 @@ const MarksheetAnalysis = ({ data }) => {
       <div className="card risk-card">
         <h2 className="section-title">⚠️ Risk Assessment</h2>
         <div className="risk-content">
-          <div className="risk-level-badge" style={{ backgroundColor: getRiskColor(risk_assessment.risk_level) }}>
+          <div className="risk-level-badge">
             {risk_assessment.risk_level} Risk
           </div>
           <div className="risk-observations">

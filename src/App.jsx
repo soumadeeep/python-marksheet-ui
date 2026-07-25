@@ -1,256 +1,94 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import './App.css';
-import MarksheetAnalysis from './MarksheetAnalysis';
+import LandingPage from './LandingPage';
+import Login from './Login';
+import Signup from './Signup';
+import Dashboard from './Dashboard';
+import MarksheetFlow from './MarksheetFlow';
 
 function App() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [marksheetFiles, setMarksheetFiles] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const fetchMarksheetAnalysis = async (files) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const apiEndpoint = 'http://marksheet-load-balancer-97479959.us-east-1.elb.amazonaws.com/analyze_marksheet';
-      
-      // Create FormData to send multiple files
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
-
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      setData(result);
-      setSubmitted(true);
-    } catch (err) {
-      setError(err.message);
-      setSampleData();
-      setSubmitted(true);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = (userInfo) => {
+    setUser(userInfo);
   };
 
-  const setSampleData = () => {
-    const sampleData = {
-      groq_response: {
-        student_information: {
-          name: "SUDIP DHAR",
-          roll_number: "B07661G",
-          institution: "SINDRANI SABITRI HIGH SCHOOL",
-          program: "MADHYAMIK PARIKSHA (SECONDARY EXAMINATION)"
-        },
-        academic_summary: {
-          total_marksheets: 2,
-          overall_trend: "Improving",
-          consistency_score: 70,
-          overall_growth_percentage: 10
-        },
-        year_wise_analysis: [
-          {
-            year: "2009",
-            percentage: 75,
-            cgpa: 7.5,
-            remarks: "Good performance"
-          },
-          {
-            year: "2023",
-            percentage: 80,
-            cgpa: 8,
-            remarks: "Excellent performance"
-          }
-        ],
-        subject_analysis: [
-          {
-            subject_name: "FIRST LANGUAGE",
-            scores: [
-              { year: "2009", marks: 69 },
-              { year: "2023", marks: 56 }
-            ],
-            trend: "Stable",
-            growth_percentage: 0,
-            recommendation: "Need to focus on language skills"
-          },
-          {
-            subject_name: "MATHEMATICS",
-            scores: [
-              { year: "2009", marks: 82 },
-              { year: "2023", marks: 41 }
-            ],
-            trend: "Declining",
-            growth_percentage: -50,
-            recommendation: "Need to work on mathematics skills"
-          }
-        ],
-        strengths: [
-          "MATHEMATICS (2009)",
-          "PHYSICAL SCIENCE (2023)"
-        ],
-        improvement_required: [
-          {
-            subject: "MATHEMATICS",
-            reason: "Declining trend",
-            recommended_actions: [
-              "Practice mathematics problems regularly",
-              "Seek help from teacher or tutor"
-            ]
-          }
-        ],
-        future_scope: {
-          recommended_streams: ["Science", "Arts"],
-          recommended_careers: ["Engineering", "Teaching"],
-          recommended_skills: ["Communication", "Problem-solving"],
-          higher_studies_suggestions: [
-            "Pursue higher education in mathematics or science",
-            "Consider taking online courses or certifications"
-          ]
-        },
-        risk_assessment: {
-          risk_level: "Medium",
-          observations: [
-            "Declining trend in mathematics",
-            "Need to focus on language skills"
-          ]
-        },
-        final_remark: {
-          summary: "The student has shown a mixed performance across the years. While there are areas of strength, there are also areas that require improvement.",
-          overall_grade: "B+",
-          mentor_suggestions: [
-            "Focus on mathematics skills",
-            "Practice language skills regularly"
-          ]
-        }
-      }
-    };
-    setData(sampleData);
+  const handleLogout = () => {
+    setUser(null);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (marksheetFiles.length === 0) {
-      setError('Please select at least one marksheet');
-      return;
-    }
-    
-    fetchMarksheetAnalysis(marksheetFiles);
+  const ProtectedRoute = ({ children }) => {
+    return user ? children : <Navigate to="/login" replace />;
   };
 
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-    // Append new files to existing files
-    setMarksheetFiles(prevFiles => [...prevFiles, ...newFiles]);
-    // Reset the file input so you can select the same file again if needed
-    e.target.value = '';
-  };
+  const Header = () => {
+    const location = useLocation();
+    const isDashboard = location.pathname === '/dashboard';
 
-  const removeFile = (index) => {
-    setMarksheetFiles(marksheetFiles.filter((_, i) => i !== index));
+    return (
+      <header className="app-header">
+        <Link to="/" className="brand">
+          AI Student Insights
+        </Link>
+        <nav className="nav-links">
+          <Link to="/" className="nav-link">
+            Home
+          </Link>
+          {user ? (
+            <>
+              {!isDashboard && (
+                <Link to="/dashboard" className="nav-link">
+                  Dashboard
+                </Link>
+              )}
+              <button className="nav-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">
+                Login
+              </Link>
+              <Link to="/signup" className="nav-link nav-link-primary">
+                Sign Up
+              </Link>
+            </>
+          )}
+        </nav>
+      </header>
+    );
   };
 
   return (
-    <div className="App">
-      {!submitted ? (
-        <div className="upload-container">
-          <div className="upload-card">
-            <h1>📊 Multi-Year Marksheet Analysis</h1>
-            <p className="subtitle">Upload multiple marksheets to get comparative year-wise analysis and insights</p>
-            
-            <form onSubmit={handleSubmit} className="upload-form">
-              <div className="form-group">
-                <label htmlFor="marksheet-files" className="form-label">🖼️ Upload Marksheet Images</label>
-                <input
-                  id="marksheet-files"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
-                  onChange={handleFileChange}
-                  className="file-input"
-                  multiple
-                />
-                
-                {marksheetFiles.length > 0 && (
-                  <div className="files-list">
-                    <p className="files-count">📎 {marksheetFiles.length} file(s) selected:</p>
-                    <ul className="file-items">
-                      {marksheetFiles.map((file, index) => (
-                        <li key={index} className="file-item">
-                          <span className="file-item-name">✓ {file.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="remove-file-btn"
-                          >
-                            ✕
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              
-              {error && <div className="error-message">{error}</div>}
-              
-              <button 
-                type="submit" 
-                className="submit-button"
-                disabled={loading || marksheetFiles.length === 0}
-              >
-                {loading ? 'Analyzing...' : 'Analyze Marksheets'}
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <>
-          {loading && (
-            <div className="loading-container">
-              <div className="spinner"></div>
-              <p>Analyzing your marksheets...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="error-container">
-              <p>⚠️ {error}</p>
-              <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>Showing sample data for demonstration</p>
-            </div>
-          )}
-          
-          {data && !loading && (
-            <>
-              <MarksheetAnalysis data={data} />
-              <div className="reset-container">
-                <button 
-                  onClick={() => {
-                    setSubmitted(false);
-                    setData(null);
-                    setMarksheetFiles([]);
-                    setError(null);
-                  }}
-                  className="reset-button"
-                >
-                  ← Analyze Other Marksheets
-                </button>
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </div>
+    <Router>
+      <Header />
+      <main className="page-container">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/signup" element={<Signup onLogin={handleLogin} />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard userEmail={user?.email} onLogout={handleLogout} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/marksheet-analysis"
+            element={
+              <ProtectedRoute>
+                <MarksheetFlow />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </Router>
   );
 }
 
